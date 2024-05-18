@@ -1,0 +1,63 @@
+project_name: push_pull
+run_name: push_pull
+
+# training setup
+use_wandb: True # set to false if you don't want to log to wandb
+train: True
+batch_size: 50
+test_batch_size: 50   # 这有用 
+epochs: 100
+device: "cuda:0"
+num_workers: 10
+lr: 1e-3
+min_x: 0
+max_x: 20
+min_y: -10
+max_y: 10
+optimizer: adamw
+clipping: False
+max_norm: 1.
+scheduler: "cosine"
+warmup: True 
+warmup_epochs: 4
+cyclic_period: 10
+plateau_patience: 3
+plateau_factor: 0.5
+seed: 0
+
+# model params
+encoding_size: 256
+attn_unet: False
+cond_predict_scale: False
+mha_num_attention_heads: 4
+mha_num_attention_layers: 4
+mha_ff_dim_factor: 4
+down_dims: [64, 128, 256]
+
+# diffusion model params
+num_diffusion_iters: 10
+
+# context
+context_type: temporal
+context_size: 5 # 5
+
+# action output params
+len_traj_pred: 16
+learn_angle: False
+
+# dataset specific parameters
+image_size: [224, 224] # width, height
+waypoint_spacing: 2
+datasets:
+  carla:
+    data_folder: ./data/120_256_256_10hz_posi
+    end_slack: 2 # because many trajectories end in collisions
+
+
+
+IMAGE_TOPIC: /carla/ego_vehicle/rgb_front/image
+ODOM_TOPIC: /carla/ego_vehicle/odometry
+
+CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
+KESHIHUA_TOPIC: /keshihua
+vel_recovery_topic: /cmd_vel_mux/input/recovery
