@@ -49,7 +49,7 @@ class ProjectionHead(nn.Module):
         x = self.layer_norm(x)
         return x
 
-class CTIPModel(nn.Module):
+class CTIPModel_old(nn.Module):
     def __init__(
         self,
         temperature=1,
@@ -82,6 +82,21 @@ class CTIPModel(nn.Module):
         images_loss = cross_entropy(logits.T, targets.T, reduction='none')
         loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
         return loss.mean()
+    
+    def get_score(self, batch):
+        # Getting Image and Text Features
+        image_features = self.image_encoder(batch["image"])
+        traj_features = self.traj_encoder(batch["traj"])
+        # Getting Image and Text Embeddings (with same dimension)
+        image_embeddings = self.image_projection(image_features)
+        traj_embeddings = self.traj_projection(traj_features)
+        
+        image_embeddings = image_embeddings / image_embeddings.norm(dim=1, keepdim=True)
+        traj_embeddings = traj_embeddings / traj_embeddings.norm(dim=1, keepdim=True)
+        
+        # Calculating the Loss
+        logits = (traj_embeddings @ image_embeddings.T) / self.temperature
+        return logits[:, 0]
 
 
 def cross_entropy(preds, targets, reduction='none'):
@@ -92,11 +107,102 @@ def cross_entropy(preds, targets, reduction='none'):
     elif reduction == "mean":
         return loss.mean()
 
-# model = CLIPModel()
+
+
+class CTIPModel(nn.Module):
+    def __init__(
+        self,
+        temperature=1,
+        image_embedding=1000,
+        traj_embedding=256,
+        traj_error = 0.3,
+    ):
+        super().__init__()
+        self.bce_loss = nn.BCEWithLogitsLoss(reduction="none")
+        self.image_encoder = torchvision.models.resnet18(weights="IMAGENET1K_V1")
+        self.traj_encoder = TrajEncoder()
+        self.image_projection = ProjectionHead(embedding_dim=image_embedding)
+        self.traj_projection = ProjectionHead(embedding_dim=128)
+        self.temperature = temperature
+        self.traj_error = traj_error
+        
+    def get_targets(self, waypoint_ori):
+        ori_traj = waypoint_ori.clone().detach()
+        batch_size, chanel, length = ori_traj.shape
+        label_matrix = torch.zeros(batch_size, batch_size)
+        for i in range(batch_size):
+            now_traj = ori_traj[i]            
+            now_traj = now_traj.expand(batch_size, chanel, length)
+            now_loss_matrix = nn.functional.mse_loss(now_traj, ori_traj, reduction='none').sum(dim=1)
+            now_loss_matrix, _ = torch.max(now_loss_matrix, dim=1)
+            label_matrix[i] = torch.where(now_loss_matrix>self.traj_error, 0, 1)
+        return label_matrix
+            
+
+    def forward(self, batch, targets):
+        # Getting Image and Text Features
+        image_features = self.image_encoder(batch["image"])
+        traj_features = self.traj_encoder(batch["traj"])
+        # Getting Image and Text Embeddings (with same dimension)
+        image_embeddings = self.image_projection(image_features)
+        traj_embeddings = self.traj_projection(traj_features)
+        
+        # Calculating the Loss
+        logits = (traj_embeddings @ image_embeddings.T) / self.temperature
+        texts_loss = self.bce_loss(logits, targets).mean(dim=1)
+        images_loss = self.bce_loss(logits.T, targets.T).mean(dim=1)
+        loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
+        return loss.mean()
+    
+    def get_score(self, batch):
+        # Getting Image and Text Features
+        image_features = self.image_encoder(batch["image"])
+        traj_features = self.traj_encoder(batch["traj"])
+        # Getting Image and Text Embeddings (with same dimension)
+        image_embeddings = self.image_projection(image_features)
+        traj_embeddings = self.traj_projection(traj_features)
+        
+        image_embeddings = image_embeddings / image_embeddings.norm(dim=1, keepdim=True)
+        traj_embeddings = traj_embeddings / traj_embeddings.norm(dim=1, keepdim=True)
+        
+        # Calculating the Loss
+        logits = (traj_embeddings @ image_embeddings.T) / self.temperature
+        return logits[:, 0]
+
+
+
+
+# import matplotlib.pyplot as plt
+# import yaml
+# model = CTIPModel()
 # batch = {}
-# fake_img = torch.rand([11, 3, 224, 224])
-# fake_traj = torch.rand([11, 2, 16])
+# with open("config/carla.yaml", "r") as f:
+#     config = yaml.load(f, Loader=yaml.FullLoader)
+# traj_path = "./data/120_256_256_10hz_posi/sample_traj.pt"
+# traj_dic = torch.load(traj_path)
+# waypoint_ori_train = traj_dic["waypoint_ori_train"] 
+# waypoint_normal_train = traj_dic["waypoint_normal_train"] 
+
+# fake_img = torch.rand([5, 3, 224, 224])
+# fake_traj = torch.rand([5, 2, 16])
 # batch["image"] = fake_img
-# batch["traj"] = fake_traj
-# output = model(batch)
-# print(output)
+# batch["traj"] = waypoint_normal_train[0:5].cpu()
+# torch.set_printoptions(threshold=1e5)
+# tagets = model.get_targets(batch)
+# print(tagets)
+# out = model(batch, tagets)
+# fig, ax = plt.subplots(facecolor ='#A0F0CC')
+# for traj in [batch["traj"][1], batch["traj"][2]]:
+#     ax.scatter(-traj[:,1],traj[:,0], c=[0.1, 0.2, 0.8], alpha=0.8)
+#     ax.plot(-traj[:,1],traj[:,0], c="b", alpha=0.8)
+# ax.set_xlim([config["min_y"], config["max_y"]])
+# ax.set_ylim([config["min_x"], config["max_x"]])
+# plt.show()
+# plt.close()
+
+
+
+
+
+
+

@@ -4,8 +4,8 @@ run_name: push_pull
 # training setup
 use_wandb: True # set to false if you don't want to log to wandb
 train: True
-batch_size: 50
-test_batch_size: 50   # 这有用 
+batch_size: 100
+test_batch_size: 100   # 这有用 
 epochs: 100
 device: "cuda:0"
 num_workers: 10
@@ -15,17 +15,10 @@ max_x: 20
 min_y: -10
 max_y: 10
 optimizer: adamw
-clipping: False
-max_norm: 1.
-scheduler: "cosine"
-warmup: True 
-warmup_epochs: 4
-cyclic_period: 10
-plateau_patience: 3
-plateau_factor: 0.5
-seed: 0
+
 
 # model params
+ckpt_path: logs/05_18_20_55_48/models/best.pt
 encoding_size: 256
 attn_unet: False
 cond_predict_scale: False
@@ -39,7 +32,7 @@ num_diffusion_iters: 10
 
 # context
 context_type: temporal
-context_size: 5 # 5
+context_size: 1 # 5
 
 # action output params
 len_traj_pred: 16
@@ -47,6 +40,7 @@ learn_angle: False
 
 # dataset specific parameters
 image_size: [224, 224] # width, height
+down_rate: 10
 waypoint_spacing: 2
 datasets:
   carla:
@@ -61,3 +55,6 @@ ODOM_TOPIC: /carla/ego_vehicle/odometry
 CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
 KESHIHUA_TOPIC: /keshihua
 vel_recovery_topic: /cmd_vel_mux/input/recovery
+ros_rate: 5
+posi_waypoints_topic: /posi_waypoints
+nega_waypoints_topic: /nega_waypoints

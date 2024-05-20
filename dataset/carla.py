@@ -10,6 +10,9 @@ import random
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 
+import jpeg4py as jpeg
+import cv2
+
 from PIL import Image
 from torchvision import transforms
 transform = transforms.Compose([
@@ -35,6 +38,7 @@ class Dataset_Carla(Dataset):
         train_or_test:str
     ):
         self.config = config
+        self.down_rate = config["down_rate"]
         self.data_folder_posi = os.path.join(config["datasets"]["carla"]["data_folder"], "data")
         traj_names_file_posi = os.path.join(config["datasets"]["carla"]["data_folder"], train_or_test+"_traj_names.txt")
 
@@ -74,7 +78,7 @@ class Dataset_Carla(Dataset):
             begin_index = self.context_size * self.waypoint_spacing
             end_index = traj_len - self.len_traj_pred * self.waypoint_spacing
    
-            for curr_index in range(begin_index, end_index, 1):
+            for curr_index in range(begin_index, end_index, self.down_rate):
                 sigle_data_dic = {}
                 img_index = range(curr_index, curr_index-self.context_size*self.waypoint_spacing, -self.waypoint_spacing)
                 sigle_data_dic["img_index"] = img_index
@@ -111,6 +115,7 @@ class Dataset_Carla(Dataset):
         # img_index from now to t-1 t-2 ...
         for now_img_index in posi_data["img_index"]:
             img_path = os.path.join(self.data_folder_posi, posi_data["traj_name"], str(now_img_index)+".jpg")
+            # img = jpeg.JPEG(img_path).decode()
             now_img = Image.open(img_path).resize(self.image_size)
             obs_images_posi_list.append(transform(now_img))
         torch.stack(obs_images_posi_list, 0)
@@ -138,17 +143,19 @@ def get_Carla_loader(config):
 
     loader_train = DataLoader(
         dataset_train,
+        pin_memory=True,
         batch_size=config["batch_size"],
         shuffle=True,
         num_workers=config["num_workers"],
-        drop_last=False,
+        drop_last=True,
     )
     loader_test = DataLoader(
         dataset_test,
+        pin_memory=True,
         batch_size=config["test_batch_size"],
         shuffle=True,
         num_workers=config["num_workers"],
-        drop_last=False,
+        drop_last=True,
     )
     return loader_train, loader_test
 

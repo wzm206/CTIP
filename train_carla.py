@@ -24,12 +24,14 @@ def train(data_loader, model, optimizer, config, args, writer):
     model.train()
     for obs_images, waypoint, img_position in loader_tqdm_train:
         batch_data = {}
+        tagets = model.get_targets(waypoint).to(config["device"])
+        # print(tagets.mean())
         batch_data["image"] = obs_images[:,0].to(config["device"])
         batch_data["traj"] = waypoint_normalize(waypoint.to(config["device"]), 
                                                 config["min_x"], config["max_x"],
                                                 config["min_y"],config["max_y"]).transpose(1, 2)
         optimizer.zero_grad()
-        loss = model(batch_data)
+        loss = model(batch_data, tagets)
         loss.backward()
         # Logs
         writer.add_scalar('loss/train', loss.item(), args.steps)
@@ -44,11 +46,12 @@ def test(data_loader, model, config, args, writer):
         loss = 0
         for obs_images, waypoint, img_position in loader_tqdm_test:
             batch_data = {}
+            tagets = model.get_targets(waypoint).to(config["device"])
             batch_data["image"] = obs_images[:,0].to(config["device"])
             batch_data["traj"] = waypoint_normalize(waypoint.to(config["device"]), 
                                                     config["min_x"], config["max_x"],
                                                     config["min_y"],config["max_y"]).transpose(1, 2)
-            loss += model(batch_data)
+            loss += model(batch_data, tagets)
         loss /= len(data_loader)
         # Logs
         writer.add_scalar('loss/test', loss.item(), args.steps)
@@ -69,18 +72,8 @@ def main(args):
 
     train_loader, test_loader = get_Carla_loader(config)
 
-    # Fixed images for Tensorboard
-    # fixed_images, _ = next(iter(test_loader))
-    # fixed_grid = make_grid(untransform(fixed_images), nrow=8, value_range=(-1, 1), normalize=False)
-    # writer.add_image('original', fixed_grid, 0)
-
     model = CTIPModel().to(config["device"])
     optimizer = torch.optim.Adam(model.parameters(), lr=float(config["lr"]))
-
-    # Generate the samples first once
-    # reconstruction = generate_samples(fixed_images, model, args)
-    # grid = make_grid(untransform(reconstruction).cpu(), nrow=8, value_range=(-1, 1), normalize=False)
-    # writer.add_image('reconstruction', grid, 0)
 
     best_loss = -1.
     for epoch in range(config["epochs"]):
