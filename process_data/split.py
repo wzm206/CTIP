@@ -1,7 +1,7 @@
 import random
 import os
 
-dataset_name = "120_256_256_10hz_posi"
+dataset_name = "bionic"
 input_folder_dir = os.path.join("./data", dataset_name, "data")
     
 print("all bags OK! Start split...")

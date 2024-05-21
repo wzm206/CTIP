@@ -8,7 +8,7 @@ from torchvision import transforms, datasets
 from torchvision.utils import save_image, make_grid
 
 from model.CTIP import CTIPModel
-from dataset.carla import get_Carla_loader
+from dataset.ctip_dataset import get_CTIP_loader
 from utils import waypoint_normalize, waypoint_unnormalize
 import tqdm
 
@@ -66,13 +66,13 @@ def generate_samples(images, model, args):
 
 def main(args):
     
-    with open("config/carla.yaml", "r") as f:
+    with open("config/ctip.yaml", "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         
     writer = SummaryWriter('./logs/{0}'.format(args.log_file_name))
     save_filename = './logs/{0}/models'.format(args.log_file_name)
 
-    train_loader, test_loader = get_Carla_loader(config)
+    train_loader, test_loader = get_CTIP_loader(config)
 
     model = CTIPModel().to(config["device"])
     optimizer = torch.optim.Adam(model.parameters(), lr=float(config["lr"]))

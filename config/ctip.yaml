@@ -40,17 +40,24 @@ learn_angle: False
 
 # dataset specific parameters
 image_size: [224, 224] # width, height
-down_rate: 10
-waypoint_spacing: 2
-datasets:
-  carla:
-    data_folder: ./data/120_256_256_10hz_posi
-    end_slack: 2 # because many trajectories end in collisions
 
 
 
-IMAGE_TOPIC: /carla/ego_vehicle/rgb_front/image
-ODOM_TOPIC: /carla/ego_vehicle/odometry
+carla:
+  data_folder: ./data/120_256_256_10hz_posi
+  end_slack: 2 # because many trajectories end in collisions
+  IMAGE_TOPIC: /carla/ego_vehicle/rgb_front/image
+  ODOM_TOPIC: /carla/ego_vehicle/odometry
+bionic:
+  input_dir: /media/wzm/新加卷/data/bionic
+  output_dir: ./data/bionic
+  img_process_func: process_wzm_img
+  odom_process_func: nav_to_xy_yaw
+  end_slack: 2 # because many trajectories end in collisions
+  IMAGE_TOPIC: /dalsa_rgb/left/image_raw
+  ODOM_TOPIC: /odom
+  down_rate: 1
+  waypoint_spacing: 5
 
 CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
 KESHIHUA_TOPIC: /keshihua

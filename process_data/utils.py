@@ -9,7 +9,7 @@ import pickle
 import torchvision.transforms.functional as TF
 
 
-IMAGE_SIZE = (96, 96)
+IMAGE_SIZE = (224, 224)
 IMAGE_ASPECT_RATIO = 4 / 3
 
 
@@ -55,7 +55,7 @@ def process_wzm_img(msg) -> Image:
         msg.height, msg.width, -1)
     img = img[:,:,[2,1,0]]
     pil_image = Image.fromarray(img)
-    return pil_image
+    return pil_image.resize(IMAGE_SIZE)
 def process_daheng_img(msg) -> Image:
     """
     Process image data from a topic that publishes sensor_msgs/CompressedImage to a PIL image for the locobot dataset
@@ -423,7 +423,6 @@ def get_carla_images_and_odom(
     output_path,
     ang_offset: float = 0.0,
 ):
-
     img_process_func = process_wzm_img
     odom_process_func = nav_to_xy_yaw
     imtopic, odomtopic = config["IMAGE_TOPIC"], config["ODOM_TOPIC"]
@@ -500,7 +499,88 @@ def get_carla_images_and_odom(
             synced_times.clear()
 
     
-    
+def get_ctip_images_and_odom(
+    bag: rosbag.Bag,
+    config,
+    traj_name,
+    dataset_name,
+    ang_offset: float = 0.0,
+):
+    output_path=os.path.join(config[dataset_name]["output_dir"], "data")
+    img_process_func = eval(config[dataset_name]["img_process_func"])
+    odom_process_func = eval(config[dataset_name]["odom_process_func"])
+    imtopic, odomtopic = config[dataset_name]["IMAGE_TOPIC"], config[dataset_name]["ODOM_TOPIC"]
+
+    synced_imdata = []
+    synced_odomdata = []
+    synced_times = []
+    # get start time of bag in seconds
+    currtime = bag.get_start_time()
+    starttime = currtime
+
+    curr_imdata = None
+    curr_odomdata = None
+    traj_index = 0
+
+    cut = False
+
+    for topic, msg, t in bag.read_messages(topics=[imtopic, odomtopic]):
+        if topic == imtopic:
+            curr_imdata = msg
+        elif topic == odomtopic:
+            curr_odomdata = msg
+            if curr_odomdata.twist.twist.linear.x<0.05:
+                cut = True
+
+        if curr_imdata is not None and curr_odomdata is not None:
+            synced_imdata.append(curr_imdata)
+            synced_odomdata.append(curr_odomdata)
+            curr_imdata = None
+            curr_odomdata = None
+            currtime = t.to_sec()
+            synced_times.append(currtime - starttime)
+
+        # 及时截断，有cut说明有碰撞信号了
+
+        if len(synced_imdata)>999:
+            cut = True
+        
+        if cut:
+            if len(synced_imdata) > 50:
+                img_data = process_images(synced_imdata, img_process_func)
+                traj_data = process_odom(
+                    synced_odomdata,
+                    odom_process_func,
+                    ang_offset=ang_offset,
+                )
+                assert len(img_data)==len(synced_times)
+                
+                # 有很多段小轨迹，这是其中的一段
+                img_data_i = img_data
+                traj_data_i = traj_data
+                time_data_i = np.array(synced_times)
+                traj_name_i = traj_name + f"_{traj_index}"
+                traj_index += 1
+                
+                traj_folder_i = os.path.join(output_path, traj_name_i)
+                # make a folder for the traj
+                if not os.path.exists(traj_folder_i):
+                    os.makedirs(traj_folder_i)
+                with open(os.path.join(traj_folder_i, "traj_data.pkl"), "wb") as f:
+                    traj_data_dic = {"traj_name":traj_name_i, "traj_time":time_data_i, "traj_data":traj_data_i}
+                    pickle.dump(traj_data_dic, f)
+                # save the image data to disk
+                for i, img in enumerate(img_data_i):
+                    img.save(os.path.join(traj_folder_i, f"{i}.jpg"))
+                
+                
+                
+            cut = False
+            curr_imdata = None
+            curr_odomdata = None
+            synced_imdata.clear()
+            synced_odomdata.clear()
+            synced_times.clear()    
 
 
 # *******************以上自己*****************************
