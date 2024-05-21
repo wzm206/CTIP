@@ -4,7 +4,8 @@ from sensor_msgs.msg import Image
 from PIL import Image as PILImage
 from typing import List, Tuple, Dict, Optional
 from torchvision import transforms
-
+import io
+IMAGE_SIZE = (224, 224)
 def to_numpy(tensor):
     return tensor.cpu().detach().numpy()
 
@@ -18,7 +19,12 @@ def msg_to_pil(msg: Image) -> PILImage.Image:
         msg.height, msg.width, -1)
     pil_image = PILImage.fromarray(img)
     return pil_image
-
+def com_msg_to_pil(msg):
+    # convert sensor_msgs/CompressedImage to PIL image
+    img = PILImage.open(io.BytesIO(msg.data))
+    # resize image to IMAGE_SIZE
+    img = img.resize(IMAGE_SIZE)
+    return img
 def transform_images(pil_imgs: List[PILImage.Image], image_size: List[int], center_crop: bool = False) -> torch.Tensor:
     """Transforms a list of PIL image to a torch tensor."""
     transform_type = transforms.Compose(

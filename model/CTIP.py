@@ -162,8 +162,8 @@ class CTIPModel(nn.Module):
         image_embeddings = self.image_projection(image_features)
         traj_embeddings = self.traj_projection(traj_features)
         
-        image_embeddings = image_embeddings / image_embeddings.norm(dim=1, keepdim=True)
-        traj_embeddings = traj_embeddings / traj_embeddings.norm(dim=1, keepdim=True)
+        # image_embeddings = image_embeddings / image_embeddings.norm(dim=1, keepdim=True)
+        # traj_embeddings = traj_embeddings / traj_embeddings.norm(dim=1, keepdim=True)
         
         # Calculating the Loss
         logits = (traj_embeddings @ image_embeddings.T) / self.temperature

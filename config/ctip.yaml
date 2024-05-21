@@ -4,8 +4,8 @@ run_name: push_pull
 # training setup
 use_wandb: True # set to false if you don't want to log to wandb
 train: True
-batch_size: 200
-test_batch_size: 200   # 这有用 
+batch_size: 100
+test_batch_size: 100   # 这有用 
 epochs: 100
 device: "cuda:0"
 num_workers: 10
@@ -18,7 +18,7 @@ optimizer: adamw
 
 
 # model params
-ckpt_path: logs/05_18_20_55_48/models/best.pt
+
 encoding_size: 256
 attn_unet: False
 cond_predict_scale: False
@@ -56,12 +56,29 @@ bionic:
   end_slack: 2 # because many trajectories end in collisions
   IMAGE_TOPIC: /dalsa_rgb/left/image_raw
   ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
   down_rate: 1
   waypoint_spacing: 5
 
+zju:
+  output_dir: ./data/zju
+  end_slack: 2 # because many trajectories end in collisions
+  IMAGE_TOPIC: /dalsa_rgb/left/image_raw
+  ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
+  down_rate: 1
+  waypoint_spacing: 3
+
+casia:
+  data_folder: ./pass
+  end_slack: 2 # because many trajectories end in collisions
+  IMAGE_TOPIC: /galaxy_camera/galaxy_camera/image_raw/compressed
+  ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
 CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
 KESHIHUA_TOPIC: /keshihua
 vel_recovery_topic: /cmd_vel_mux/input/recovery
 ros_rate: 5
 posi_waypoints_topic: /posi_waypoints
 nega_waypoints_topic: /nega_waypoints
+ckpt_path: logs/05_21_bionic/best.pt

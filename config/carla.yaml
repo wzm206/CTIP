@@ -4,8 +4,8 @@ run_name: push_pull
 # training setup
 use_wandb: True # set to false if you don't want to log to wandb
 train: True
-batch_size: 200
-test_batch_size: 200   # 这有用 
+batch_size: 100
+test_batch_size: 100   # 这有用 
 epochs: 100
 device: "cuda:0"
 num_workers: 10
@@ -18,7 +18,7 @@ optimizer: adamw
 
 
 # model params
-ckpt_path: logs/05_18_20_55_48/models/best.pt
+ckpt_path: logs/05_20_15_49_07/models/best.pt
 encoding_size: 256
 attn_unet: False
 cond_predict_scale: False

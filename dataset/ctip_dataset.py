@@ -88,10 +88,10 @@ class Dataset_CTIP(Dataset):
                 now_position, now_yaw = traj_data["traj_data"]["position"][curr_index], traj_data["traj_data"]["yaw"][curr_index]
                 abs_position_pre = traj_data["traj_data"]["position"][traj_index]
                 sigle_data_dic["position_predict_data"] = to_local_coords(abs_position_pre, now_position, now_yaw)
-                sigle_data_dic["time_predict_data"] = traj_data["traj_time"][traj_index]
+                # sigle_data_dic["time_predict_data"] = traj_data["traj_time"][traj_index]
                 abs_position_img =traj_data["traj_data"]["position"][img_index]
                 sigle_data_dic["position_img_data"] = to_local_coords(abs_position_img, now_position, now_yaw)
-                sigle_data_dic["time_img_data"] = traj_data["traj_time"][img_index]
+                # sigle_data_dic["time_img_data"] = traj_data["traj_time"][img_index]
                 sigle_data_dic["traj_name"] = traj_data["traj_name"]
                 index_data_dic["posi"].append(sigle_data_dic)
                 
@@ -171,41 +171,41 @@ def get_CTIP_loader(config):
 
 # test code
 
-# with open("config/ctip.yaml", "r") as f:
-#     config = yaml.load(f, Loader=yaml.FullLoader)
+with open("config/ctip.yaml", "r") as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
     
-# dataset = Dataset_CTIP(
-#         config=config,
-#         train_or_test="train",
-#         dataset_name="bionic",
-#     )
-# from torch.utils.data import DataLoader, ConcatDataset
+dataset = Dataset_CTIP(
+        config=config,
+        train_or_test="train",
+        dataset_name="zju",
+    )
+from torch.utils.data import DataLoader, ConcatDataset
 
-# untransform = transforms.Compose([
-#     transforms.Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225], 
-#                          std=[1/0.229, 1/0.224, 1/0.225]),
-# ])
+untransform = transforms.Compose([
+    transforms.Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225], 
+                         std=[1/0.229, 1/0.224, 1/0.225]),
+])
 
-# loader = DataLoader(
-#     dataset,
-#     batch_size=66,
-#     shuffle=True,
-#     num_workers=0,
-#     drop_last=False,
-# )
-# import matplotlib.pyplot as plt
-# for data in loader:
-#     (obs_images_posi,
-#     waypoint_posi,
-#     img_position_posi) = data
+loader = DataLoader(
+    dataset,
+    batch_size=66,
+    shuffle=True,
+    num_workers=0,
+    drop_last=False,
+)
+import matplotlib.pyplot as plt
+for data in loader:
+    (obs_images_posi,
+    waypoint_posi,
+    img_position_posi) = data
     
-#     now_img = obs_images_posi[0][0]
-#     img_np = untransform(now_img).cpu().detach().numpy()
-#     f, (ax1, ax2) = plt.subplots(1, 2)
-#     ax1.imshow(img_np.transpose(1,2,0))
-#     label_np = waypoint_posi[0].cpu().detach().numpy()
-#     ax2.plot(-label_np[:,1],label_np[:,0], c="b")
-#     plt.xlim(-10, 10)  # 设定绘图范围
-#     plt.ylim(0, 20) 
-#     plt.show()
+    now_img = obs_images_posi[0][0]
+    img_np = untransform(now_img).cpu().detach().numpy()
+    f, (ax1, ax2) = plt.subplots(1, 2)
+    ax1.imshow(img_np.transpose(1,2,0))
+    label_np = waypoint_posi[0].cpu().detach().numpy()
+    ax2.plot(-label_np[:,1],label_np[:,0], c="b")
+    plt.xlim(-10, 10)  # 设定绘图范围
+    plt.ylim(0, 20) 
+    plt.show()
     
