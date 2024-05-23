@@ -47,7 +47,8 @@ def transform_images(pil_imgs: List[PILImage.Image], image_size: List[int], cent
     print(len(transf_imgs))
     return torch.cat(transf_imgs, dim=1)
 
-def waypoint_normalize(waypoint_ori, x_min, x_max, y_min, y_max):
+def waypoint_normalize(waypoint_ori, config):
+    x_min, x_max, y_min, y_max = config["x_min"], config["x_max"], config["y_min"], config["y_max"]
     waypoint = waypoint_ori.clone()
     assert waypoint.shape[-1] == 2
     waypoint[...,0] = (waypoint[...,0]-x_min)/(x_max-x_min)
@@ -56,7 +57,8 @@ def waypoint_normalize(waypoint_ori, x_min, x_max, y_min, y_max):
     waypoint[...,1] = waypoint[...,1]*2 - 1
     return waypoint
 
-def waypoint_unnormalize(waypoint_ori, x_min, x_max, y_min, y_max):
+def waypoint_unnormalize(waypoint_ori, config):
+    x_min, x_max, y_min, y_max = config["x_min"], config["x_max"], config["y_min"], config["y_max"]
     waypoint = waypoint_ori.clone()
     assert waypoint.shape[-1] == 2
     waypoint = (waypoint+1)/2

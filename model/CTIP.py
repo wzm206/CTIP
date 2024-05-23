@@ -128,30 +128,56 @@ class CTIPModel(nn.Module):
         
     def get_targets(self, waypoint_ori):
         ori_traj = waypoint_ori.clone().detach()
-        batch_size, chanel, length = ori_traj.shape
+        batch_size, length, chanel = ori_traj.shape
+        clip_length = length//2
+        ori_traj = ori_traj[:, clip_length:, 1]
         label_matrix = torch.zeros(batch_size, batch_size)
         for i in range(batch_size):
-            now_traj = ori_traj[i]            
-            now_traj = now_traj.expand(batch_size, chanel, length)
-            now_loss_matrix = nn.functional.mse_loss(now_traj, ori_traj, reduction='none').sum(dim=1)
-            now_loss_matrix, _ = torch.max(now_loss_matrix, dim=1)
-            label_matrix[i] = torch.where(now_loss_matrix>self.traj_error, 0, 1)
-        return label_matrix
+            now_traj = ori_traj[i]
+            # 有1的行应该排除 
+            dddd = torch.gt(ori_traj, now_traj-0.5) & torch.lt(ori_traj, now_traj+0.5)
+            index = torch.any(dddd, dim=1)
+            label_matrix[i]=index
+        diag = torch.diag(label_matrix)
+        
+        return label_matrix - torch.diag_embed(diag)
             
 
     def forward(self, batch, targets):
+        # target similar is 1
+        # ([[0., 1., 1., 1., 0.],
+        # [1., 0., 1., 1., 0.],
+        # [1., 1., 0., 1., 1.],
+        # [1., 1., 1., 0., 0.],
+        # [0., 0., 1., 0., 0.]])
+        
         # Getting Image and Text Features
         image_features = self.image_encoder(batch["image"])
         traj_features = self.traj_encoder(batch["traj"])
+        batch_size, device = image_features.shape[0], image_features.device
         # Getting Image and Text Embeddings (with same dimension)
         image_embeddings = self.image_projection(image_features)
         traj_embeddings = self.traj_projection(traj_features)
-        
+        tagets_inverse = torch.where(targets==0, 1, 0)
         # Calculating the Loss
         logits = (traj_embeddings @ image_embeddings.T) / self.temperature
-        texts_loss = self.bce_loss(logits, targets).mean(dim=1)
-        images_loss = self.bce_loss(logits.T, targets.T).mean(dim=1)
-        loss =  (images_loss + texts_loss) / 2.0 # shape: (batch_size)
+        logits = logits*tagets_inverse - 1000*targets
+        labels = torch.arange(batch_size, device=device).long()
+        
+        # image_loss_mat = torch.cosine_similarity(image_embeddings.unsqueeze(1), image_embeddings.unsqueeze(0), dim=2)
+        # image_loss_mat.diagonal().zero_()
+        # image_loss_mat = image_loss_mat*tagets_inverse
+
+        # traj_loss_mat = torch.cosine_similarity(traj_embeddings.unsqueeze(1), traj_embeddings.unsqueeze(0), dim=2)
+        # traj_loss_mat.diagonal().zero_()
+        # traj_loss_mat = traj_loss_mat*tagets_inverse
+        
+        loss = (
+            F.cross_entropy(logits, labels) +
+            F.cross_entropy(logits.T, labels)
+        ) / 2
+
+        # return loss.mean()+traj_loss_mat.mean()+image_loss_mat.mean()
         return loss.mean()
     
     def get_score(self, batch):
@@ -162,12 +188,9 @@ class CTIPModel(nn.Module):
         image_embeddings = self.image_projection(image_features)
         traj_embeddings = self.traj_projection(traj_features)
         
-        # image_embeddings = image_embeddings / image_embeddings.norm(dim=1, keepdim=True)
-        # traj_embeddings = traj_embeddings / traj_embeddings.norm(dim=1, keepdim=True)
-        
         # Calculating the Loss
         logits = (traj_embeddings @ image_embeddings.T) / self.temperature
-        return logits[:, 0]
+        return logits
 
 
 
@@ -186,13 +209,26 @@ class CTIPModel(nn.Module):
 # fake_img = torch.rand([5, 3, 224, 224])
 # fake_traj = torch.rand([5, 2, 16])
 # batch["image"] = fake_img
-# batch["traj"] = waypoint_normal_train[0:5].cpu()
+# batch["traj"] = waypoint_ori_train[5:10].cpu()
 # torch.set_printoptions(threshold=1e5)
-# tagets = model.get_targets(batch)
-# print(tagets)
-# out = model(batch, tagets)
+# tagets = model.get_targets(batch["traj"])
+
+# input = {}
+# print(batch["traj"].shape)
+# input["traj"] = batch["traj"].transpose(1,2)
+# input["image"] = fake_img
+# model(input, tagets)
+# # print(tagets)
+# # tagets_inverse = torch.where(tagets==0, 1, 0)
+# # print(tagets_inverse)
+# # out = model(batch, tagets)
 # fig, ax = plt.subplots(facecolor ='#A0F0CC')
-# for traj in [batch["traj"][1], batch["traj"][2]]:
+# red_traj = batch["traj"][0]
+# ax.scatter(-red_traj[:,1],red_traj[:,0], c=[0.8, 0.2, 0.1], alpha=0.8)
+# ax.plot(-red_traj[:,1],red_traj[:,0], c="r", alpha=0.8, linewidth = 3)
+# for i, traj in enumerate(batch["traj"]):
+#     if tagets[0][i]==1:
+#         continue
 #     ax.scatter(-traj[:,1],traj[:,0], c=[0.1, 0.2, 0.8], alpha=0.8)
 #     ax.plot(-traj[:,1],traj[:,0], c="b", alpha=0.8)
 # ax.set_xlim([config["min_y"], config["max_y"]])

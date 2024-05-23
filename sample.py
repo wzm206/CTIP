@@ -9,7 +9,7 @@ from torchvision import transforms, datasets
 from torchvision.utils import save_image, make_grid
 
 from model.CTIP import CTIPModel
-from dataset.carla import get_Carla_loader
+from dataset.ctip_dataset import get_casia_loader
 from utils import *
 import tqdm
 
@@ -20,80 +20,66 @@ untransform = transforms.Compose([
                          std=[1/0.229, 1/0.224, 1/0.225]),
 ])
 
-def sample_waypoints(data_loader, config):
-    loader_tqdm_test = tqdm.tqdm(data_loader, desc="Test Batch", leave=False)
-    ret_waypoint = None
-    for i_index, (obs_images, waypoint, img_position) in enumerate(loader_tqdm_test):
-        now_waypoint = waypoint_normalize(waypoint.to(config["device"]), 
-                                                config["min_x"], config["max_x"],
-                                                config["min_y"],config["max_y"]).transpose(1, 2)
-        if i_index==0:
-            ret_waypoint = now_waypoint
-            continue
-        ret_waypoint = torch.cat([ret_waypoint, now_waypoint], dim=0)
-        if i_index>=4:
-            break
-    return
-
-def get_scores(data_loader, model, config):
-    loader_tqdm_test = tqdm.tqdm(data_loader, desc="Test Batch", leave=False)
+def test(data_loader, model, config):
     model.eval()
+    loader_tqdm_test = tqdm.tqdm(data_loader, desc="Test Batch", leave=False)
     with torch.no_grad():
         loss = 0
-        for obs_images, waypoint, img_position in loader_tqdm_test:
-            batch_size = obs_images.shape[0]
+        for i, (obs_images, waypoint, img_position) in enumerate(loader_tqdm_test):
             batch_data = {}
-            waypoint = waypoint.to(config["device"])
-            sigle_img = obs_images[0,0].to(config["device"])
-            chanel, w, h = sigle_img.shape
-            same_imgs = sigle_img.expand(batch_size, chanel, w, h )
-            batch_data["image"] = same_imgs
-            batch_data["traj"] = waypoint_normalize(waypoint, 
-                                                    config["min_x"], config["max_x"],
-                                                    config["min_y"],config["max_y"]).transpose(1, 2)
-            batch_score = model.get_score(batch_data)
+            tagets = model.get_targets(waypoint).to(config["device"])
+            batch_data["image"] = obs_images[:,0].to(config["device"])
+            batch_data["traj"] = waypoint_normalize(waypoint, config).transpose(1, 2).to(config["device"])
+            loss += model(batch_data, tagets)
             
-            show_waypoint(sigle_img, batch_score, waypoint, config)
+            generate_samples(batch_data, model, config, sample_name = "sp")
+            
+        loss /= len(data_loader)
 
-
-def show_waypoint(sigle_img, batch_score, all_waypoints, config):
-    _, top5_index = torch.topk(batch_score, k=5, dim=0, largest=True, sorted=True)  # k=2
-    _, last5_index = torch.topk(batch_score, k=5, dim=0, largest=False, sorted=True)  # k=2
-    top5_data = to_numpy(torch.index_select(all_waypoints, dim=0, index=top5_index))
-    last5_data = to_numpy(torch.index_select(all_waypoints, dim=0, index=last5_index))
-    image_now_numpy = to_numpy(untransform(sigle_img))
-    # visualize
-    f, (all_ax) = plt.subplots(1, 2)
-    all_ax[0].imshow(image_now_numpy.transpose(1,2,0))
-    for i_waypoint_index, waypoint_now in enumerate(top5_data):
-        all_ax[1].scatter(-waypoint_now[:,1],waypoint_now[:,0], c=[0.1, 0.2, 0.8], alpha=0.8)
-        all_ax[1].plot(-waypoint_now[:,1],waypoint_now[:,0], c="b", alpha=0.8)
-    for i_waypoint_index, waypoint_now in enumerate(last5_data):
-        all_ax[1].scatter(-waypoint_now[:,1],waypoint_now[:,0], c=[0.8, 0.2, 0.1], alpha=0.8)
-        all_ax[1].plot(-waypoint_now[:,1],waypoint_now[:,0], c="r", alpha=0.8)
-    
-    all_ax[1].set_xlim([config["min_y"], config["max_y"]])
-    all_ax[1].set_ylim([config["min_x"], config["max_x"]])
-    plt.show()
-    plt.close()
+    return loss
+def generate_samples(batch, model, config, sample_name = "aaa"):
+    with torch.no_grad():
+        all_waypoints = waypoint_unnormalize(batch["traj"].transpose(1, 2), config)
+        sigle_img = batch["image"][0]
+        batch_score = model.get_score(batch)
+        _, top5_index = torch.topk(batch_score, k=5, dim=1, largest=True, sorted=True)  # k=2
+        _, last5_index = torch.topk(batch_score, k=5, dim=1, largest=False, sorted=True)  # k=2
+        top5_data = to_numpy(torch.index_select(all_waypoints, dim=0, index=top5_index[0]))
+        last5_data = to_numpy(torch.index_select(all_waypoints, dim=0, index=last5_index[0]))
+        image_now_numpy = to_numpy(untransform(sigle_img))
+        gt_data = to_numpy(all_waypoints[0])
+        # visualize
+        f, (all_ax) = plt.subplots(1, 2)
+        all_ax[0].imshow(image_now_numpy.transpose(1,2,0))
+        # gt
+        all_ax[1].plot(-gt_data[:,1],gt_data[:,0], c="g", alpha=0.8, linewidth = 5)
+        for i_waypoint_index, waypoint_now in enumerate(top5_data):
+            all_ax[1].plot(-waypoint_now[:,1],waypoint_now[:,0], c="b", alpha=0.3)
+        for i_waypoint_index, waypoint_now in enumerate(last5_data):
+            all_ax[1].plot(-waypoint_now[:,1],waypoint_now[:,0], c="r", alpha=0.3)
+        
+        all_ax[1].set_xlim([config["y_min"], config["y_max"]])
+        all_ax[1].set_ylim([config["x_min"], config["x_max"]+5])
+        nowtime = time.strftime("%m_%d_%H_%M_%S")
+        plt.savefig(os.path.join("./samples", sample_name+nowtime+".jpg"))
+        plt.close()
 
 
 
 def main(args):
     
-    with open("config/carla.yaml", "r") as f:
+    with open("config/ctip.yaml", "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         
 
 
-    train_loader, test_loader = get_Carla_loader(config)
+    train_loader, test_loader = get_casia_loader(config)
 
     model = CTIPModel().to(config["device"])
     model = load_model_para(model, config)
+    test(train_loader, model, config)
 
-    # sample_waypoints(test_loader, config)
-    # 这里的 waypoints 没有归一化
-    sigle_img, batch_score, all_waypoints = get_scores(test_loader, model, config)
+    
     
     
     

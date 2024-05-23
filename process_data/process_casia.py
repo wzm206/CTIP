@@ -21,14 +21,14 @@ def main(args: argparse.Namespace):
     # load the config file
     with open(args.config_path, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    config["dataset_name"] = args.dataset_name
+
     # create output dir if it doesn't exist
-    if not os.path.exists(config[args.dataset_name]["output_dir"]):
-        os.makedirs(config[args.dataset_name]["output_dir"])
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
 
     # iterate recurisively through all the folders and get the path of files with .bag extension in the args.input_dir
     bag_files = []
-    for root, dirs, files in os.walk(config[args.dataset_name]["input_dir"]):
+    for root, dirs, files in os.walk(args.input_dir):
         for file in files:
             if file.endswith(".bag"):
                 bag_files.append(os.path.join(root, file))
@@ -53,7 +53,7 @@ def main(args: argparse.Namespace):
             bag=b,
             config=config,
             traj_name=traj_name,
-            dataset_name=args.dataset_name
+            output_path=os.path.join(args.output_dir, "data")
             
         )
   
@@ -62,13 +62,6 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--dataset_name",
-        "-dn",
-        default="rgb_loop",
-        type=str,
-        help="dataset name",
-    )
     # number of trajs to process
     parser.add_argument(
         "--num-bags",

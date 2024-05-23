@@ -1,7 +1,7 @@
 import random
 import os
 
-dataset_name = "zju"
+dataset_name = "rgb_loop"
 input_folder_dir = os.path.join("./data", dataset_name, "data")
     
 print("all bags OK! Start split...")
