@@ -51,8 +51,9 @@ def test(data_loader, model, config, args, writer):
             tagets = model.get_targets(waypoint).to(config["device"])
             batch_data["image"] = obs_images[:,0].to(config["device"])
             batch_data["traj"] = waypoint_normalize(waypoint, config).transpose(1, 2).to(config["device"])
-            loss += model(batch_data, tagets)
-            
+            now_loss = model(batch_data, tagets).item()
+            loss += now_loss
+            loader_tqdm_test.set_postfix(now_batch_loss=loss.item())
             if i<3:
                 generate_samples(batch_data, model, config, sample_name = "test")
             
@@ -81,7 +82,7 @@ def generate_samples(batch, model, config, sample_name = "aaa"):
         for i_waypoint_index, waypoint_now in enumerate(last5_data):
             all_ax[1].plot(-waypoint_now[:,1],waypoint_now[:,0], c="r", alpha=0.3)
         
-        all_ax[1].set_xlim([config["y_min"], config["y_max"]])
+        all_ax[1].set_xlim([config["y_min"]-3, config["y_max"]+3])
         all_ax[1].set_ylim([config["x_min"], config["x_max"]+5])
         nowtime = time.strftime("%m_%d_%H_%M_%S")
         plt.savefig(os.path.join(config["log_samples"], sample_name+nowtime+".jpg"))
@@ -91,7 +92,9 @@ def main(args):
     
     with open("config/ctip.yaml", "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-        
+
+    with open('./logs/{0}/train_config.yaml'.format(args.log_file_name), 'w') as f:
+        yaml.dump(config, f, default_flow_style=False)
     writer = SummaryWriter('./logs/{0}'.format(args.log_file_name))
     save_filename = './logs/{0}/models'.format(args.log_file_name)
     config["log_samples"] = './logs/{0}/samples'.format(args.log_file_name)
