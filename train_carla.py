@@ -24,7 +24,7 @@ def train(data_loader, model, optimizer, config, args, writer):
     model.train()
     for obs_images, waypoint, img_position in loader_tqdm_train:
         batch_data = {}
-        tagets = model.get_targets(waypoint).to(config["device"])
+        tagets = model.get_targets(waypoint, config).to(config["device"])
         # print(tagets.mean())
         batch_data["image"] = obs_images[:,0].to(config["device"])
         # batch_data["traj"] = waypoint_normalize(waypoint.to(config["device"]), 
@@ -47,7 +47,7 @@ def test(data_loader, model, config, args, writer):
         loss = 0
         for obs_images, waypoint, img_position in loader_tqdm_test:
             batch_data = {}
-            tagets = model.get_targets(waypoint).to(config["device"])
+            tagets = model.get_targets(waypoint, config).to(config["device"])
             batch_data["image"] = obs_images[:,0].to(config["device"])
             # batch_data["traj"] = waypoint_normalize(waypoint.to(config["device"]), 
             #                                         config["min_x"], config["max_x"],

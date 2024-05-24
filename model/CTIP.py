@@ -126,7 +126,8 @@ class CTIPModel(nn.Module):
         self.temperature = temperature
         self.traj_error = traj_error
         
-    def get_targets(self, waypoint_ori):
+    def get_targets(self, waypoint_ori, config):
+        threshold = float(config["threshold"])
         ori_traj = waypoint_ori.clone().detach()
         batch_size, length, chanel = ori_traj.shape
         clip_length = length//2
@@ -135,7 +136,7 @@ class CTIPModel(nn.Module):
         for i in range(batch_size):
             now_traj = ori_traj[i]
             # 有1的行应该排除 
-            dddd = torch.gt(ori_traj, now_traj-0.5) & torch.lt(ori_traj, now_traj+0.5)
+            dddd = torch.gt(ori_traj, now_traj-threshold) & torch.lt(ori_traj, now_traj+threshold)
             index = torch.any(dddd, dim=1)
             label_matrix[i]=index
         diag = torch.diag(label_matrix)
@@ -211,7 +212,7 @@ class CTIPModel(nn.Module):
 # batch["image"] = fake_img
 # batch["traj"] = waypoint_ori_train[5:10].cpu()
 # torch.set_printoptions(threshold=1e5)
-# tagets = model.get_targets(batch["traj"])
+# tagets = model.get_targets(batch["traj"], config)
 
 # input = {}
 # print(batch["traj"].shape)

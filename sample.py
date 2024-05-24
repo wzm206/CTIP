@@ -27,7 +27,7 @@ def test(data_loader, model, config):
         loss = 0
         for i, (obs_images, waypoint, img_position) in enumerate(loader_tqdm_test):
             batch_data = {}
-            tagets = model.get_targets(waypoint).to(config["device"])
+            tagets = model.get_targets(waypoint, config).to(config["device"])
             batch_data["image"] = obs_images[:,0].to(config["device"])
             batch_data["traj"] = waypoint_normalize(waypoint, config).transpose(1, 2).to(config["device"])
             loss += model(batch_data, tagets)

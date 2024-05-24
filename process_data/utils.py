@@ -504,8 +504,9 @@ def get_ctip_images_and_odom(
     config,
     traj_name,
     dataset_name,
-    ang_offset: float = 0.0,
 ):
+    ang_offset = float(config[dataset_name]["ang_offset"])
+
     output_path=os.path.join(config[dataset_name]["output_dir"], "data")
     img_process_func = eval(config[dataset_name]["img_process_func"])
     odom_process_func = eval(config[dataset_name]["odom_process_func"])

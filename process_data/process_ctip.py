@@ -53,7 +53,7 @@ def main(args: argparse.Namespace):
             bag=b,
             config=config,
             traj_name=traj_name,
-            dataset_name=args.dataset_name
+            dataset_name=args.dataset_name, 
             
         )
   
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_name",
         "-dn",
-        default="rgb_loop",
+        default="tartan_drive",
         type=str,
         help="dataset name",
     )

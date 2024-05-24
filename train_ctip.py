@@ -25,7 +25,7 @@ def train(data_loader, model, optimizer, config, args, writer):
     model.train()
     for i, (obs_images, waypoint, img_position) in enumerate(loader_tqdm_train):
         batch_data = {}
-        tagets = model.get_targets(waypoint).to(config["device"])
+        tagets = model.get_targets(waypoint, config).to(config["device"])
         # print(tagets.mean())
         batch_data["image"] = obs_images[:,0].to(config["device"])
         batch_data["traj"] = waypoint_normalize(waypoint, config).transpose(1, 2).to(config["device"])
@@ -48,18 +48,18 @@ def test(data_loader, model, config, args, writer):
         loss = 0
         for i, (obs_images, waypoint, img_position) in enumerate(loader_tqdm_test):
             batch_data = {}
-            tagets = model.get_targets(waypoint).to(config["device"])
+            tagets = model.get_targets(waypoint, config).to(config["device"])
             batch_data["image"] = obs_images[:,0].to(config["device"])
             batch_data["traj"] = waypoint_normalize(waypoint, config).transpose(1, 2).to(config["device"])
             now_loss = model(batch_data, tagets).item()
             loss += now_loss
-            loader_tqdm_test.set_postfix(now_batch_loss=loss.item())
+            loader_tqdm_test.set_postfix(now_batch_loss=now_loss)
             if i<3:
                 generate_samples(batch_data, model, config, sample_name = "test")
             
         loss /= len(data_loader)
         # Logs
-        writer.add_scalar('loss/test', loss.item(), args.steps)
+        writer.add_scalar('loss/test', loss, args.steps)
     return loss
 def generate_samples(batch, model, config, sample_name = "aaa"):
     with torch.no_grad():
