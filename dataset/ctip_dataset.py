@@ -128,7 +128,7 @@ def get_casia_loader(config):
 
 def get_CTIP_loader(config):
     dataset_name_list = ["bionic", "zju", "rgb_loop"]
-    # dataset_name_list = ["rgb_loop"]
+    # dataset_name_list = ["sacson_test"]
     dataset_train_list, dataset_test_list = [], []
     for dataset_name in dataset_name_list:
         dataset_train = Dataset_CTIP(
@@ -170,7 +170,7 @@ def get_CTIP_loader(config):
 
 
 
-# test code
+# # test code
 
 # with open("config/ctip.yaml", "r") as f:
 #     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -181,11 +181,10 @@ def get_CTIP_loader(config):
 # ])
 # train_loader, test_loader = get_CTIP_loader(config)
 # import matplotlib.pyplot as plt
-# for data in test_loader:
+# for data in train_loader:
 #     (obs_images_posi,
 #     waypoint_posi,
 #     img_position_posi) = data
-    
 #     now_img = obs_images_posi[0][0]
 #     img_np = untransform(now_img).cpu().detach().numpy()
 #     f, (ax1, ax2) = plt.subplots(1, 2)
@@ -193,6 +192,6 @@ def get_CTIP_loader(config):
 #     label_np = waypoint_posi[0].cpu().detach().numpy()
 #     ax2.plot(-label_np[:,1],label_np[:,0], c="b")
 #     plt.xlim(-10, 10)  # 设定绘图范围
-#     plt.ylim(0, 20) 
+#     plt.ylim(-1, 10) 
 #     plt.show()
     

@@ -11,11 +11,11 @@ device: "cuda:0"
 num_workers: 10
 lr: 1e-4
 x_min: 0
-x_max: 10
-y_min: -2
-y_max: 2
+x_max: 5
+y_min: -3
+y_max: 3
 optimizer: adamw
-threshold: 0.2
+threshold: 0.01
 
 
 
@@ -60,6 +60,7 @@ bionic:
   end_slack: 2 # because many trajectories end in collisions
   IMAGE_TOPIC: /dalsa_rgb/left/image_raw
   ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
   down_rate: 1
   waypoint_spacing: 4
   ang_offset: 0
@@ -68,6 +69,7 @@ zju:
   end_slack: 2 # because many trajectories end in collisions
   IMAGE_TOPIC: /dalsa_rgb/left/image_raw
   ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
   down_rate: 1
   waypoint_spacing: 2
   ang_offset: 0
@@ -79,6 +81,7 @@ daheng:
   end_slack: 2 # because many trajectories end in collisions
   IMAGE_TOPIC: /galaxy_camera/galaxy_camera/image_raw/compressed
   ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
   img_process_func: process_daheng_img
   odom_process_func: nav_to_xy_yaw
   down_rate: 1
@@ -92,6 +95,7 @@ casia_rgb:
   end_slack: 2 # because many trajectories end in collisions
   IMAGE_TOPIC: /camera/color/image_raw/compressed
   ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
   img_process_func: process_daheng_img
   odom_process_func: nav_to_xy_yaw
   down_rate: 1
@@ -105,6 +109,7 @@ rgb_loop:
   end_slack: 2 # because many trajectories end in collisions
   IMAGE_TOPIC: /camera/color/image_raw/compressed
   ODOM_TOPIC: /odom
+  CONTROL_TOPIC: /pass
   img_process_func: process_daheng_img
   odom_process_func: nav_to_xy_yaw
   down_rate: 1
@@ -118,19 +123,21 @@ tartan_drive:
   end_slack: 2 # because many trajectories end in collisions
   IMAGE_TOPIC: /multisense/left/image_rect_color
   ODOM_TOPIC: /odometry/filtered_odom
+  CONTROL_TOPIC: /pass
   img_process_func: process_tartan_img
   odom_process_func: nav_to_xy_yaw
   down_rate: 1
   waypoint_spacing: 12
   ang_offset: 1.5707963267948966 # pi/2
 
-SACSoN:
-  input_dir: /home/wzm/data/CTIP_data/SACSoN
-  output_dir: ./data/SACSoN
+sacson_test:
+  input_dir: /home/wzm/data/CTIP_data/sacson_test
+  output_dir: ./data/sacson_test
   data_folder: ./pass
   end_slack: 17 # because many trajectories end in collisions
   IMAGE_TOPIC: /fisheye_image/compressed
   ODOM_TOPIC: /odometry
+  CONTROL_TOPIC: /pass
   img_process_func: process_scand_img
   odom_process_func: nav_to_xy_yaw
   down_rate: 1
@@ -138,9 +145,9 @@ SACSoN:
   ang_offset: 0
 
 
-CONTROL_TOPIC: cmd_vel
-# CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
+CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
 KESHIHUA_TOPIC: /keshihua
+vel_recovery_topic: /cmd_vel_mux/input/recovery
 ros_rate: 5
 posi_waypoints_topic: /posi_waypoints
 nega_waypoints_topic: /nega_waypoints

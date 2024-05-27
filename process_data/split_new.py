@@ -7,7 +7,7 @@ import pickle
 import sys
 sys.path.append(os.getcwd())
 
-dataset_name = "rgb_loop"
+dataset_name = "sacson_test"
 input_folder_dir = os.path.join("./data", dataset_name, "data")
     
 print("all bags OK! Start split...")
@@ -38,6 +38,7 @@ image_size = config["image_size"]
 len_traj_pred = config["len_traj_pred"]
 context_size = config["context_size"]
 waypoint_spacing = config[dataset_name]["waypoint_spacing"]
+end_slack = config[dataset_name]["end_slack"]
 
 index_data_dic = {}
 index_data_dic["posi"] = []
@@ -53,7 +54,7 @@ for traj_name in tqdm.tqdm(folder_names, dynamic_ncols=True):
     # traj_data_i = {"position": np.array(xys), "yaw": np.array(yaws)}
     traj_len = len(traj_data["traj_data"]["position"])
     begin_index = context_size * waypoint_spacing
-    end_index = traj_len - len_traj_pred * waypoint_spacing
+    end_index = traj_len - len_traj_pred * waypoint_spacing - end_slack
 
     for curr_index in range(begin_index, end_index, down_rate):
         sigle_data_dic = {}

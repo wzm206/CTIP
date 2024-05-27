@@ -9,8 +9,8 @@ import io
 bridge = CvBridge()
  
 # 指定bag文件和话题名称
-bag_file = "/home/wzm/data/real_casia/rgb/rgb_test/2024-05-23-15-10-11.bag"
-image_topic = "/camera/color/image_raw/compressed"
+bag_file = "/home/wzm/data/CTIP_data/SACSoN/Feb-13-2023-bww8-intloss/00000006.bag"
+image_topic = "/fisheye_image/compressed"
  
 # 打开bag文件
 bag = rosbag.Bag(bag_file, "r")

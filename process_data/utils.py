@@ -530,7 +530,7 @@ def get_ctip_images_and_odom(
             curr_imdata = msg
         elif topic == odomtopic:
             curr_odomdata = msg
-            if curr_odomdata.twist.twist.linear.x<0.05:
+            if curr_odomdata.twist.twist.linear.x<0.001:
                 cut = True
 
         if curr_imdata is not None and curr_odomdata is not None:

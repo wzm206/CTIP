@@ -65,7 +65,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_name",
         "-dn",
-        default="tartan_drive",
+        default="SACSoN",
         type=str,
         help="dataset name",
     )
