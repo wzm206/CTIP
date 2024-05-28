@@ -90,7 +90,7 @@ class Dataset_CTIP(Dataset):
 
 
 def get_casia_loader(config):
-    dataset_name_list = ["casia_rgb"]
+    dataset_name_list = ["red_test"]
     dataset_train_list, dataset_test_list = [], []
     for dataset_name in dataset_name_list:
         dataset_train = Dataset_CTIP(

@@ -68,7 +68,7 @@ def generate_samples(batch, model, config, sample_name = "aaa"):
 
 def main(args):
     
-    with open("config/ctip.yaml", "r") as f:
+    with open("config/ctip_indoor.yaml", "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
         
 

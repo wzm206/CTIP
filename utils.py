@@ -25,6 +25,12 @@ def com_msg_to_pil(msg):
     # resize image to IMAGE_SIZE
     img = img.resize(IMAGE_SIZE)
     return img
+def daheng_msg_to_pil(msg):
+    # convert sensor_msgs/CompressedImage to PIL image
+    img = PILImage.open(io.BytesIO(msg.data))
+    img = PILImage.Image.crop(img, (200, 200, 2448-200, 2048-300))
+    img = img.resize(IMAGE_SIZE)
+    return img
 def transform_images(pil_imgs: List[PILImage.Image], image_size: List[int], center_crop: bool = False) -> torch.Tensor:
     """Transforms a list of PIL image to a torch tensor."""
     transform_type = transforms.Compose(
