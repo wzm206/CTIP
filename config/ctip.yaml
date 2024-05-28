@@ -144,4 +144,4 @@ KESHIHUA_TOPIC: /keshihua
 ros_rate: 5
 posi_waypoints_topic: /posi_waypoints
 nega_waypoints_topic: /nega_waypoints
-ckpt_path: logs/05_23_22_05_49/models/model_92.pt
+ckpt_path: logs/ctip_outdoor/model_200.pt

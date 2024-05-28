@@ -27,7 +27,7 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped, Quaternion, Twist
 sys.path.insert(0,sys.path[0]+"/../")
 from model.CTIP import CTIPModel
-from utils import waypoint_normalize, load_model_para, to_numpy, msg_to_pil, transform_images
+from utils import *
 from simple_pid import PID
 
 from dataset.ctip_dataset import get_CTIP_loader
@@ -43,7 +43,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Using device:", device)
 
 def callback_obs(msg):
-    obs_img = msg_to_pil(msg)
+    obs_img = com_msg_to_pil(msg)
     if context_size is not None:
         # 注意先后顺序
         if len(context_queue) < context_size:
@@ -67,7 +67,7 @@ def main(config):
     rospy.init_node("EXPLORATION", anonymous=False)
     rate = rospy.Rate(config["ros_rate"])
     image_curr_msg = rospy.Subscriber(
-        config["rgb_loop"]["IMAGE_TOPIC"], Image, callback_obs, queue_size=1)
+        config["rgb_loop"]["IMAGE_TOPIC"], CompressedImage, callback_obs, queue_size=1)
     carla_twist_pub = rospy.Publisher(config["CONTROL_TOPIC"], Twist, queue_size=1)
 
     keshihua_pub1_posi = rospy.Publisher(config["posi_waypoints_topic"] + "1", Path, queue_size=10)
@@ -85,8 +85,8 @@ def main(config):
 
     batch_data = {}
     traj_dic = torch.load("./sample_traj_ctip.pt")
-    waypoint_ori_train = traj_dic["waypoint_ori_train"] 
-    waypoint_normal_train = traj_dic["waypoint_normal_train"] 
+    waypoint_ori_train = traj_dic["waypoint_ori_train"].to(device)
+    waypoint_normal_train = traj_dic["waypoint_normal_train"].to(device)
     batch_data["traj"] = waypoint_normal_train
         
     print("Registered with master node. Waiting for image observations...")
@@ -104,11 +104,13 @@ def main(config):
             chanel, w, h = obs_images.shape
             same_imgs = obs_images.expand(batch_size, chanel, w, h ).to(device)
             batch_data["image"] = same_imgs
-            batch_score = model.get_score(batch_data)
-            _, top5_index = torch.topk(batch_score, k=5, dim=1, largest=True, sorted=True)  # k=2
-            _, last5_index = torch.topk(batch_score, k=5, dim=1, largest=False, sorted=True)  # k=2
-            top5_data = to_numpy(torch.index_select(batch_data["traj"], dim=0, index=top5_index[0]))
-            last5_data = to_numpy(torch.index_select(batch_data["traj"], dim=0, index=last5_index[0]))
+            batch_score = model.get_score(batch_data)[:, 0]
+            # print(batch_score)
+            _, top5_index = torch.topk(batch_score, k=5, dim=0, largest=True, sorted=True)  # k=2
+            _, last5_index = torch.topk(batch_score, k=5, dim=0, largest=False, sorted=True)  # k=2
+            # print(top5_index[0:3])
+            top5_data = to_numpy(torch.index_select(waypoint_ori_train, dim=0, index=top5_index))
+            last5_data = to_numpy(torch.index_select(waypoint_ori_train, dim=0, index=last5_index))
 
             
             action = top5_data[0] # change this based on heuristic
@@ -116,7 +118,7 @@ def main(config):
 
             # calculate control input
             vel_msg = Twist()
-            v = 3
+            v = 0.5
             w = np.arctan(chosen_waypoint[1]/chosen_waypoint[0])
             pid_out = pid(-w)
             vel_msg.linear.x = v
