@@ -147,4 +147,4 @@ vel_recovery_topic: /cmd_vel_mux/input/recovery
 ros_rate: 5
 posi_waypoints_topic: /posi_waypoints
 nega_waypoints_topic: /nega_waypoints
-ckpt_path: logs/ctip_indoor_yuyan/model_30.pt
+ckpt_path: logs/ctip_indoor_yuyan/model_60.pt

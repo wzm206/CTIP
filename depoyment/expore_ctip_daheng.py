@@ -84,7 +84,7 @@ def main(config):
     keshihua_pub5_nega = rospy.Publisher(config["nega_waypoints_topic"] + "5", Path, queue_size=10)
 
     batch_data = {}
-    traj_dic = torch.load("./sample_traj_ctip.pt")
+    traj_dic = torch.load("./sample_traj_ctip_indoor.pt")
     waypoint_ori_train = traj_dic["waypoint_ori_train"].to(device)
     waypoint_normal_train = traj_dic["waypoint_normal_train"].to(device)
     batch_data["traj"] = waypoint_normal_train
