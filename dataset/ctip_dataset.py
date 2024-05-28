@@ -164,7 +164,43 @@ def get_CTIP_loader(config):
     )
     return loader_train, loader_test
 
+def get_CTIP_indoor_loader(config):
+    # dataset_name_list = ["bionic", "zju", "rgb_loop"]
+    dataset_name_list = ["SACSoN"]
+    dataset_train_list, dataset_test_list = [], []
+    for dataset_name in dataset_name_list:
+        dataset_train = Dataset_CTIP(
+                config=config,
+                train_or_test="train",
+                dataset_name=dataset_name,
+            )
+        dataset_test = Dataset_CTIP(
+                config=config,
+                train_or_test="test",
+                dataset_name=dataset_name,
+            )
+        dataset_train_list.append(dataset_train)
+        dataset_test_list.append(dataset_test)
 
+    dataset_train, dataset_test = ConcatDataset(dataset_train_list), ConcatDataset(dataset_test_list)
+    
+    loader_train = DataLoader(
+        dataset_train,
+        pin_memory=True,
+        batch_size=config["batch_size"],
+        shuffle=True,
+        num_workers=config["num_workers"],
+        drop_last=True,
+    )
+    loader_test = DataLoader(
+        dataset_test,
+        pin_memory=True,
+        batch_size=config["test_batch_size"],
+        shuffle=True,
+        num_workers=config["num_workers"],
+        drop_last=True,
+    )
+    return loader_train, loader_test
 
 
 
