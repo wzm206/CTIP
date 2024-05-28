@@ -32,7 +32,7 @@ from simple_pid import PID
 
 from dataset.ctip_dataset import get_CTIP_loader
 
-pid = PID(0.4, 0, 0, setpoint=0, output_limits=(-0.4, 0.4))
+pid = PID(0.3, 0, 0, setpoint=0, output_limits=(-0.4, 0.4))
 
 # GLOBALS
 context_queue = []
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--waypoint",
         "-w",
-        default=8, # close waypoints exihibit straight line motion (the middle waypoint is a good default)
+        default=6, # close waypoints exihibit straight line motion (the middle waypoint is a good default)
         type=int,
         help=f"""index of the waypoint used for navigation (between 0 and 4 or 
         how many waypoints your model predicts) (default: 2)""",
