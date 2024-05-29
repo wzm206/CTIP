@@ -48,14 +48,14 @@ image_size: [224, 224] # width, height
 
 carla:
   input_dir: /home/wzm/data/carla/120_256_256_5_whether
-  output_dir: ./data/120_256_256_5_whether
+  output_dir: ./data/carla
   end_slack: 0 
   IMAGE_TOPIC: /carla/ego_vehicle/rgb_front/image
   ODOM_TOPIC: /carla/ego_vehicle/odometry
   img_process_func: process_wzm_img
   odom_process_func: nav_to_xy_yaw
   down_rate: 1
-  waypoint_spacing: 4
+  waypoint_spacing: 2
   ang_offset: 0
 bionic:
   input_dir: /media/wzm/新加卷/data/bionic
