@@ -65,7 +65,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_name",
         "-dn",
-        default="SACSoN",
+        default="carla",
         type=str,
         help="dataset name",
     )
