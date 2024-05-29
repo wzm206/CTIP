@@ -245,26 +245,26 @@ def get_CTIP_indoor_loader(config):
 
 # test code
 
-with open("config/ctip.yaml", "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
-from torch.utils.data import DataLoader, ConcatDataset
-untransform = transforms.Compose([
-    transforms.Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225], 
-                         std=[1/0.229, 1/0.224, 1/0.225]),
-])
-train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["carla"])
-import matplotlib.pyplot as plt
-for data in train_loader:
-    (obs_images_posi,
-    waypoint_posi,
-    img_position_posi) = data
-    now_img = obs_images_posi[0][0]
-    img_np = untransform(now_img).cpu().detach().numpy()
-    f, (ax1, ax2) = plt.subplots(1, 2)
-    ax1.imshow(img_np.transpose(1,2,0))
-    label_np = waypoint_posi[0].cpu().detach().numpy()
-    ax2.plot(-label_np[:,1],label_np[:,0], c="b")
-    plt.xlim(-10, 10)  # 设定绘图范围
-    plt.ylim(-1, 15) 
-    plt.show()
+# with open("config/ctip.yaml", "r") as f:
+#     config = yaml.load(f, Loader=yaml.FullLoader)
+# from torch.utils.data import DataLoader, ConcatDataset
+# untransform = transforms.Compose([
+#     transforms.Normalize(mean=[-0.485/0.229, -0.456/0.224, -0.406/0.225], 
+#                          std=[1/0.229, 1/0.224, 1/0.225]),
+# ])
+# train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["carla"])
+# import matplotlib.pyplot as plt
+# for data in train_loader:
+#     (obs_images_posi,
+#     waypoint_posi,
+#     img_position_posi) = data
+#     now_img = obs_images_posi[0][0]
+#     img_np = untransform(now_img).cpu().detach().numpy()
+#     f, (ax1, ax2) = plt.subplots(1, 2)
+#     ax1.imshow(img_np.transpose(1,2,0))
+#     label_np = waypoint_posi[0].cpu().detach().numpy()
+#     ax2.plot(-label_np[:,1],label_np[:,0], c="b")
+#     plt.xlim(-10, 10)  # 设定绘图范围
+#     plt.ylim(-1, 15) 
+#     plt.show()
     
