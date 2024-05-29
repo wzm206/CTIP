@@ -8,7 +8,7 @@ from torchvision import transforms, datasets
 from torchvision.utils import save_image, make_grid
 
 from model.CTIP import CTIPModel
-from dataset.ctip_dataset import get_CTIP_loader
+from dataset.ctip_dataset import get_CTIP_loader_from_list
 from utils import *
 import matplotlib.pyplot as plt
 import tqdm
@@ -98,7 +98,7 @@ def main(args):
     writer = SummaryWriter('./logs/{0}'.format(args.log_file_name))
     save_filename = './logs/{0}/models'.format(args.log_file_name)
     config["log_samples"] = './logs/{0}/samples'.format(args.log_file_name)
-    train_loader, test_loader = get_CTIP_loader(config)
+    train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["rgb_loop"])
 
     model = CTIPModel().to(config["device"])
     optimizer = torch.optim.Adam(model.parameters(), lr=float(config["lr"]))
@@ -141,7 +141,6 @@ if __name__ == '__main__':
     if not os.path.exists(f'./logs/{nowtime}/samples'):
         os.makedirs(f'./logs/{nowtime}/samples')    
     print(f'./logs/{nowtime}/models')
-
 
     
     args.steps = 0
