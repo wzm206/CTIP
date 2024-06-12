@@ -30,7 +30,7 @@ from model.CTIP import CTIPModel
 from utils import waypoint_normalize, waypoint_unnormalize, load_model_para, to_numpy, msg_to_pil, transform_images
 from simple_pid import PID
 
-from dataset.carla import get_Carla_loader
+from dataset.ctip_dataset import get_CTIP_loader_from_list
 
 pid = PID(0.4, 0, 0, setpoint=0, output_limits=(-0.4, 0.4))
 
@@ -67,8 +67,8 @@ def main(config):
     rospy.init_node("EXPLORATION", anonymous=False)
     rate = rospy.Rate(config["ros_rate"])
     image_curr_msg = rospy.Subscriber(
-        config["IMAGE_TOPIC"], Image, callback_obs, queue_size=1)
-    carla_twist_pub = rospy.Publisher(config["CARLA_TWIST_TOPIC"], Twist, queue_size=1)
+        config["carla"]["IMAGE_TOPIC"], Image, callback_obs, queue_size=1)
+    carla_twist_pub = rospy.Publisher("/carla/ego_vehicle/twist", Twist, queue_size=1)
 
     keshihua_pub1_posi = rospy.Publisher(config["posi_waypoints_topic"] + "1", Path, queue_size=10)
     keshihua_pub2_posi = rospy.Publisher(config["posi_waypoints_topic"] + "2", Path, queue_size=10)
@@ -84,14 +84,17 @@ def main(config):
     keshihua_pub5_nega = rospy.Publisher(config["nega_waypoints_topic"] + "5", Path, queue_size=10)
 
     batch_data = {}
-    train_loader, test_loader = get_Carla_loader(config)
-    with torch.no_grad():
-        obs_images, waypoint, img_position =next(iter(test_loader))
-        batch_size = obs_images.shape[0]
-        waypoint = waypoint.to(config["device"])
-        batch_data["traj"] = waypoint_normalize(waypoint, 
-                                                config["min_x"], config["max_x"],
-                                                config["min_y"],config["max_y"]).transpose(1, 2)
+    traj_dic = torch.load("./sample_traj_ctip.pt")
+    waypoint = traj_dic["waypoint_ori_train"].to(device)
+    waypoint_normal_train = traj_dic["waypoint_normal_train"].to(device)
+    batch_data["traj"] = waypoint_normal_train
+    
+    # train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["carla"])
+    # with torch.no_grad():
+    #     obs_images, waypoint, img_position =next(iter(test_loader))
+    #     batch_size = obs_images.shape[0]
+    #     waypoint = waypoint.to(config["device"])
+    #     batch_data["traj"] = waypoint_normalize(waypoint, config).transpose(1, 2)
         
     print("Registered with master node. Waiting for image observations...")
     
@@ -108,9 +111,10 @@ def main(config):
             chanel, w, h = obs_images.shape
             same_imgs = obs_images.expand(batch_size, chanel, w, h ).to(device)
             batch_data["image"] = same_imgs
-            batch_score = model.get_score(batch_data)
+            batch_score = model.get_score(batch_data)[:, 0]
             _, top5_index = torch.topk(batch_score, k=5, dim=0, largest=True, sorted=True)  # k=2
             _, last5_index = torch.topk(batch_score, k=5, dim=0, largest=False, sorted=True)  # k=2
+
             top5_data = to_numpy(torch.index_select(waypoint, dim=0, index=top5_index))
             last5_data = to_numpy(torch.index_select(waypoint, dim=0, index=last5_index))
 
@@ -184,7 +188,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config",
         "-c",
-        default="config/carla.yaml",
+        default="config/ctip.yaml",
         type=str,
         help="Path to the config file in train_config folder",
     )

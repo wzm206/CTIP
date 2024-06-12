@@ -98,7 +98,7 @@ def main(args):
     writer = SummaryWriter('./logs/{0}'.format(args.log_file_name))
     save_filename = './logs/{0}/models'.format(args.log_file_name)
     config["log_samples"] = './logs/{0}/samples'.format(args.log_file_name)
-    train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["rgb_loop"])
+    train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["carla"])
 
     model = CTIPModel().to(config["device"])
     optimizer = torch.optim.Adam(model.parameters(), lr=float(config["lr"]))

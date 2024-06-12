@@ -4,8 +4,8 @@ run_name: push_pull
 # training setup
 use_wandb: True # set to false if you don't want to log to wandb
 train: True
-batch_size: 200
-test_batch_size: 200   # 这有用 
+batch_size: 100
+test_batch_size: 100   # 这有用 
 epochs: 100
 device: "cuda:0"
 num_workers: 10
@@ -142,6 +142,13 @@ SACSoN:
   waypoint_spacing: 2
   ang_offset: 0
 
+nclt:
+  output_dir: ./data/nclt
+  data_folder: ./pass
+  end_slack: 5 # because many trajectories end in collisions
+  down_rate: 2
+  waypoint_spacing: 1
+  ang_offset: 0
 
 CONTROL_TOPIC: cmd_vel
 # CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
@@ -149,4 +156,4 @@ KESHIHUA_TOPIC: /keshihua
 ros_rate: 5
 posi_waypoints_topic: /posi_waypoints
 nega_waypoints_topic: /nega_waypoints
-ckpt_path: logs/0524/model_200.pt
+ckpt_path: logs/casia/0_5model_100.pt

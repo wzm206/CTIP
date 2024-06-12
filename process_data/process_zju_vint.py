@@ -13,7 +13,7 @@ file_name_list = os.listdir(base_path)
 for now_file_name in file_name_list:
 
     ori_path = os.path.join(base_path, now_file_name)
-    output_path = "/home/wzm/project/wzm/CTIP/data/zju/data"
+    output_path = "/home/wzm/project/wzm/vint_wzm/data/zju"
 
 
     traj_name = now_file_name
@@ -72,8 +72,7 @@ for now_file_name in file_name_list:
                 if not os.path.exists(traj_folder_i):
                     os.makedirs(traj_folder_i)
                 with open(os.path.join(traj_folder_i, "traj_data.pkl"), "wb") as f:
-                    traj_data_dic = {"traj_name":traj_name_i, "traj_data":traj_data_i}
-                    pickle.dump(traj_data_dic, f)
+                    pickle.dump(traj_data_i, f)
                 # save the image data to disk
                 for i, img in enumerate(img_data_i):
                     img.save(os.path.join(traj_folder_i, f"{i}.jpg"))

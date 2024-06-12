@@ -7,7 +7,7 @@ import pickle
 import sys
 sys.path.append(os.getcwd())
 
-dataset_name = "carla"
+dataset_name = "nclt"
 input_folder_dir = os.path.join("./data", dataset_name, "data")
     
 print("all bags OK! Start split...")
