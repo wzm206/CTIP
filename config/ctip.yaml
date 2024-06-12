@@ -4,8 +4,8 @@ run_name: push_pull
 # training setup
 use_wandb: True # set to false if you don't want to log to wandb
 train: True
-batch_size: 100
-test_batch_size: 100   # 这有用 
+batch_size: 200
+test_batch_size: 200 
 epochs: 100
 device: "cuda:0"
 num_workers: 10
@@ -15,7 +15,7 @@ x_max: 10
 y_min: -2
 y_max: 2
 optimizer: adamw
-threshold: 0.2
+threshold: 0.5
 
 
 

@@ -98,14 +98,14 @@ def main(args):
     writer = SummaryWriter('./logs/{0}'.format(args.log_file_name))
     save_filename = './logs/{0}/models'.format(args.log_file_name)
     config["log_samples"] = './logs/{0}/samples'.format(args.log_file_name)
-    train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["carla"])
+    train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["rgb_loop"])
 
     model = CTIPModel().to(config["device"])
     optimizer = torch.optim.Adam(model.parameters(), lr=float(config["lr"]))
 
     best_loss = -1.
     for epoch in range(config["epochs"]):
-        train(train_loader, model, optimizer, config, args, writer)
+        train(test_loader, model, optimizer, config, args, writer)
         loss = test(test_loader, model, config, args, writer)
         print(epoch)
 
