@@ -50,7 +50,6 @@ def transform_images(pil_imgs: List[PILImage.Image], image_size: List[int], cent
         transf_img = transform_type(pil_img)
         transf_img = torch.unsqueeze(transf_img, 0)
         transf_imgs.append(transf_img)
-    print(len(transf_imgs))
     return torch.cat(transf_imgs, dim=1)
 
 def waypoint_normalize(waypoint_ori, config):

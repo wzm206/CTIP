@@ -105,7 +105,7 @@ def main(args):
 
     best_loss = -1.
     for epoch in range(config["epochs"]):
-        train(test_loader, model, optimizer, config, args, writer)
+        train(train_loader, model, optimizer, config, args, writer)
         loss = test(test_loader, model, config, args, writer)
         print(epoch)
 

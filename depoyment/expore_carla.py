@@ -84,10 +84,11 @@ def main(config):
     keshihua_pub5_nega = rospy.Publisher(config["nega_waypoints_topic"] + "5", Path, queue_size=10)
 
     batch_data = {}
-    traj_dic = torch.load("./sample_traj_ctip.pt")
+    traj_dic = torch.load("./sample_traj_ctip_carla.pt")
     waypoint = traj_dic["waypoint_ori_train"].to(device)
     waypoint_normal_train = traj_dic["waypoint_normal_train"].to(device)
     batch_data["traj"] = waypoint_normal_train
+    
     
     # train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["carla"])
     # with torch.no_grad():
@@ -106,18 +107,14 @@ def main(config):
                 len(context_queue) == context_size
             ):
 
-            batch_size = config["test_batch_size"]
-            obs_images = transform_images(context_queue, config["image_size"], center_crop=False)[0]
-            chanel, w, h = obs_images.shape
-            same_imgs = obs_images.expand(batch_size, chanel, w, h ).to(device)
-            batch_data["image"] = same_imgs
-            batch_score = model.get_score(batch_data)[:, 0]
+            obs_images = transform_images(context_queue, config["image_size"], center_crop=False)[0].to(device)
+            # chanel, w, h = obs_images.shape
+            batch_data["image"] = obs_images
+            batch_score = model.get_score_deploy(obs_images, waypoint_normal_train)
             _, top5_index = torch.topk(batch_score, k=5, dim=0, largest=True, sorted=True)  # k=2
             _, last5_index = torch.topk(batch_score, k=5, dim=0, largest=False, sorted=True)  # k=2
-
             top5_data = to_numpy(torch.index_select(waypoint, dim=0, index=top5_index))
             last5_data = to_numpy(torch.index_select(waypoint, dim=0, index=last5_index))
-
             
             action = top5_data[0] # change this based on heuristic
             chosen_waypoint = action[args.waypoint]
@@ -130,7 +127,7 @@ def main(config):
             vel_msg.linear.x = v
             vel_msg.angular.z = pid_out
             
-            print(f"publishing new vel: {v}, {w}")
+            print(f"publishing new vel: {v}, {pid_out}")
             
             carla_twist_pub.publish(vel_msg)
 

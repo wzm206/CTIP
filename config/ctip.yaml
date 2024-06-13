@@ -4,8 +4,8 @@ run_name: push_pull
 # training setup
 use_wandb: True # set to false if you don't want to log to wandb
 train: True
-batch_size: 200
-test_batch_size: 200 
+batch_size: 100
+test_batch_size: 100 
 epochs: 100
 device: "cuda:0"
 num_workers: 10
@@ -156,4 +156,4 @@ KESHIHUA_TOPIC: /keshihua
 ros_rate: 5
 posi_waypoints_topic: /posi_waypoints
 nega_waypoints_topic: /nega_waypoints
-ckpt_path: logs/casia/0_5model_100.pt
+ckpt_path: logs/carla/0_5model_40.pt

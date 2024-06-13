@@ -191,7 +191,19 @@ class CTIPModel(nn.Module):
         # Calculating the Loss
         logits = (traj_embeddings @ image_embeddings.T) / self.temperature
         return logits
-
+    
+    def get_score_deploy(self, sigle_img, traj_data):
+        if sigle_img.shape[0] != 1:
+            sigle_img = sigle_img.unsqueeze(0)
+        # Getting Image and Text Features
+        image_features = self.image_encoder(sigle_img)
+        traj_features = self.traj_encoder(traj_data)
+        # Getting Image and Text Embeddings (with same dimension)
+        image_embeddings = self.image_projection(image_features)
+        traj_embeddings = self.traj_projection(traj_features)
+        # Calculating the Loss
+        logits = (traj_embeddings @ image_embeddings.T) / self.temperature
+        return logits.squeeze()
 
 
 
