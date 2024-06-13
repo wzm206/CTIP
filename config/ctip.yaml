@@ -150,10 +150,19 @@ nclt:
   waypoint_spacing: 1
   ang_offset: 0
 
+
 CONTROL_TOPIC: cmd_vel
-# CARLA_TWIST_TOPIC: /carla/ego_vehicle/twist
 KESHIHUA_TOPIC: /keshihua
 ros_rate: 5
 posi_waypoints_topic: /posi_waypoints
 nega_waypoints_topic: /nega_waypoints
-ckpt_path: logs/carla/0_5model_40.pt
+# deploy_env
+data_carla:
+  ckpt_path: logs/carla/0_5model_100.pt
+  traj_path: ./sample_traj_ctip_carla.pt
+data_all:
+  ckpt_path: logs/data_all/0_5model_100.pt
+  traj_path: ./sample_traj_ctip_all.pt
+data_casia:
+  ckpt_path: logs/casia/0_5model_100.pt
+  traj_path: ./sample_traj_ctip_casia.pt

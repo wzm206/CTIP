@@ -57,10 +57,10 @@ def main(config):
     global context_size
 
     context_size = config["context_size"]
-
+    config["ckpt_path"] = config[args.deploy_env]["ckpt_path"]
+    print("load traj from:", config["ckpt_path"])
     model = CTIPModel().to(config["device"])
     model = load_model_para(model, config)
-
     model.eval()
 
     # ROS
@@ -84,22 +84,15 @@ def main(config):
     keshihua_pub5_nega = rospy.Publisher(config["nega_waypoints_topic"] + "5", Path, queue_size=10)
 
     batch_data = {}
-    traj_dic = torch.load("./sample_traj_ctip_carla.pt")
-    waypoint = traj_dic["waypoint_ori_train"].to(device)
+    traj_dic = torch.load(config[args.deploy_env]["traj_path"])
+    print("load traj from:", config[args.deploy_env]["traj_path"])
+    
+    waypoint_ori_train = traj_dic["waypoint_ori_train"].to(device)
     waypoint_normal_train = traj_dic["waypoint_normal_train"].to(device)
     batch_data["traj"] = waypoint_normal_train
-    
-    
-    # train_loader, test_loader = get_CTIP_loader_from_list(config, dataset_name_list=["carla"])
-    # with torch.no_grad():
-    #     obs_images, waypoint, img_position =next(iter(test_loader))
-    #     batch_size = obs_images.shape[0]
-    #     waypoint = waypoint.to(config["device"])
-    #     batch_data["traj"] = waypoint_normalize(waypoint, config).transpose(1, 2)
         
     print("Registered with master node. Waiting for image observations...")
-    
-    last_w = 0
+        
 
     while not rospy.is_shutdown():
         # EXPLORATION MODE
@@ -113,8 +106,8 @@ def main(config):
             batch_score = model.get_score_deploy(obs_images, waypoint_normal_train)
             _, top5_index = torch.topk(batch_score, k=5, dim=0, largest=True, sorted=True)  # k=2
             _, last5_index = torch.topk(batch_score, k=5, dim=0, largest=False, sorted=True)  # k=2
-            top5_data = to_numpy(torch.index_select(waypoint, dim=0, index=top5_index))
-            last5_data = to_numpy(torch.index_select(waypoint, dim=0, index=last5_index))
+            top5_data = to_numpy(torch.index_select(waypoint_ori_train, dim=0, index=top5_index))
+            last5_data = to_numpy(torch.index_select(waypoint_ori_train, dim=0, index=last5_index))
             
             action = top5_data[0] # change this based on heuristic
             chosen_waypoint = action[args.waypoint]
@@ -189,9 +182,19 @@ if __name__ == "__main__":
         type=str,
         help="Path to the config file in train_config folder",
     )
+    
+    parser.add_argument(
+        "--deploy_env",
+        "-de",
+        default="data_carla",
+        type=str,
+        help="choose which model",
+    )
+    
     args = parser.parse_args()
 
 
+    
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
 

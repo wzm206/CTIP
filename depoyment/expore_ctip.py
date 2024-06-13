@@ -30,7 +30,6 @@ from model.CTIP import CTIPModel
 from utils import *
 from simple_pid import PID
 
-from dataset.ctip_dataset import get_CTIP_loader
 
 pid = PID(0.3, 0, 0, setpoint=0, output_limits=(-0.4, 0.4))
 
@@ -57,10 +56,10 @@ def main(config):
     global context_size
 
     context_size = config["context_size"]
-
+    config["ckpt_path"] = config[args.deploy_env]["ckpt_path"]
+    print("load traj from:", config["ckpt_path"])
     model = CTIPModel().to(config["device"])
     model = load_model_para(model, config)
-
     model.eval()
 
     # ROS
@@ -84,14 +83,15 @@ def main(config):
     keshihua_pub5_nega = rospy.Publisher(config["nega_waypoints_topic"] + "5", Path, queue_size=10)
 
     batch_data = {}
-    traj_dic = torch.load("./sample_traj_ctip.pt")
+    traj_dic = torch.load(config[args.deploy_env]["traj_path"])
+    print("load traj from:", config[args.deploy_env]["traj_path"])
+    
     waypoint_ori_train = traj_dic["waypoint_ori_train"].to(device)
     waypoint_normal_train = traj_dic["waypoint_normal_train"].to(device)
     batch_data["traj"] = waypoint_normal_train
         
     print("Registered with master node. Waiting for image observations...")
-    
-    last_w = 0
+
 
     while not rospy.is_shutdown():
         # EXPLORATION MODE
@@ -167,13 +167,6 @@ if __name__ == "__main__":
         help=f"""index of the waypoint used for navigation (between 0 and 4 or 
         how many waypoints your model predicts) (default: 2)""",
     )
-    parser.add_argument(
-        "--num-samples",
-        "-n",
-        default=8,
-        type=int,
-        help=f"Number of actions sampled from the exploration model (default: 8)",
-    )
     
     parser.add_argument(
         "--config",
@@ -182,9 +175,19 @@ if __name__ == "__main__":
         type=str,
         help="Path to the config file in train_config folder",
     )
+    
+    parser.add_argument(
+        "--deploy_env",
+        "-de",
+        default="data_casia",
+        type=str,
+        help="choose which model",
+    )
+    
     args = parser.parse_args()
 
 
+    
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
 
